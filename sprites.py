@@ -28,7 +28,7 @@ class Hearts(pygame.sprite.Sprite):
 class Wizard(Movement):
     lives = 3
     def __init__(self) -> None:
-        self.image = pygame.image.load("sprites/wiz.png").convert()
+        self.image = pygame.image.load("sprites/wiz.png").convert_alpha()
         self.image.set_colorkey((0,0,0), RLEACCEL)
         self.image = pygame.transform.scale(self.image, (200,200))
         Movement.__init__(self)
@@ -109,3 +109,4 @@ class Bullet(Movement):
             self.rect.move_ip(0, -5)
         else:
             self.kill()
+            

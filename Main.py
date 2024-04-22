@@ -3,24 +3,16 @@ import sys
 from sprites import *
 
 def setScore(score,firstRun = False):
-    text = font.render(f"Score: {score}", True, BLACK, WHITE)
+    text = font.render(f"Score: {score}", True, WHITE)
     if firstRun:
         rect = text.get_rect()
-        rect.center = (WIDTH-75,25)
-        return text, rect
-    return text
-
-def setLives(lives, firstRun = False):
-    text = font.render(f"Lives: {lives}", True, BLACK, WHITE)
-    if firstRun:
-        rect = text.get_rect()
-        rect.center = (75,25)
+        rect.center = (WIDTH-150,73)
         return text, rect
     return text
 
 def gameOver():
     gameoverFont = pygame.font.SysFont("Comis Sans MS", 100)
-    gameoverText = gameoverFont.render("GAME OVER!!!", True, BLACK, WHITE)
+    gameoverText = gameoverFont.render("GAME OVER!!!", True, WHITE)
     gameoverRect = gameoverText.get_rect()
     gameoverRect.center = (WIDTH//2, HEIGHT//2)
     screen.blit(gameoverText, gameoverRect)
@@ -42,10 +34,15 @@ score = 0
 prevLives = Wizard.lives
 hearts = Hearts()
 
-font = pygame.font.SysFont("Comic Sans MS", 32)
+font = pygame.font.SysFont("ebrima", 32,bold=True)
 
 scoreText,scoreRect = setScore(score,True)
-livesText,livesRect = setLives(Wizard.lives,True)
+scoreBorder = pygame.image.load("sprites/Border.png").convert_alpha()
+scoreBorder.set_colorkey((0,0,0), RLEACCEL)
+scoreBorder = pygame.transform.scale(scoreBorder, (scoreBorder.get_size()[0] * 5,scoreBorder.get_size()[1] * 5))
+
+bg = pygame.image.load("sprites/bg.png")
+bg = pygame.transform.smoothscale(bg, (WIDTH,HEIGHT))
 
 ticks = clock.tick(144)
 
@@ -54,9 +51,7 @@ while running:
     
     clock.tick(144)
     screen.fill(WHITE)
-    
-    screen.blit(scoreText, scoreRect)
-    screen.blit(hearts.image, (25,15))
+    screen.blit(bg,(0,0))
     
     # Lets you press x to exit game
     for event in pygame.event.get():
@@ -67,7 +62,7 @@ while running:
         
         # Sets a timer for spiders spawning
         if iterator >= spawning:
-            spiders = Spider((0, randint(50,HEIGHT-300)))
+            spiders = Spider((0, randint(100,HEIGHT-300)))
             enemies.add(spiders)
             iterator = 0
         iterator += 1
@@ -95,11 +90,15 @@ while running:
         if prevLives != Wizard.lives:
             hearts.loseHeart()
             hearts.update()
-            livesText = setLives(Wizard.lives)
             prevLives = Wizard.lives
     
     else:
         gameOver()
+        
+    screen.blit(scoreText, scoreRect)
+    screen.blit(scoreBorder, (WIDTH-275,15))
+    
+    screen.blit(hearts.image, (25,15))
         
     # updates score and lives
         
