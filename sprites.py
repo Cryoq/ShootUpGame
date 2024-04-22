@@ -42,13 +42,13 @@ class Wizard(Movement):
     def update(self, keyspressed: dict):
         if keyspressed[K_RIGHT]:
             self.moveRight(self.speed)
-            if self.movingLeft == True:
+            if self.movingLeft:
                 self.image = pygame.transform.flip(self.image, True, False)
                 self.movingLeft, self.movingRight = False, True
     
         if keyspressed[K_LEFT]:
             self.moveLeft(self.speed)
-            if self.movingRight == True:
+            if self.movingRight:
                 self.image = pygame.transform.flip(self.image, True, False)
                 self.movingRight, self.movingLeft = False, True
         
