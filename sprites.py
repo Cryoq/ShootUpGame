@@ -3,67 +3,87 @@ from movement import *
 
 class Hearts(pygame.sprite.Sprite):
     def __init__(self) -> None:
-        self.img = "3hearts.png"
+        self.sprites = [pygame.image.load("sprites/0hearts.png").convert_alpha()]
+        self.sprites.append(pygame.image.load("sprites/1hearts.png").convert_alpha())
+        self.sprites.append(pygame.image.load("sprites/2hearts.png").convert_alpha())
+        self.sprites.append(pygame.image.load("sprites/3hearts.png").convert_alpha())
+        self.currentSprite = 3
         self.setHeartSprite()
         
     def loseHeart(self):
-        imageList = list(self.img)
-        number = int(self.img[0])
-        imageList[0] = str(number-1)
-        self.img = ''.join(imageList)
+        self.currentSprite -= 1
         self.setHeartSprite()
         
     def gainHeart(self):
-        imageList = list(self.img)
-        number = int(self.image[0])
-        imageList[0] = str(number+1)
-        self.img = ''.join(imageList)
+        self.currentSprite += 1
         self.setHeartSprite()
         
     def setHeartSprite(self):
-        self.image = pygame.image.load(f"sprites/{self.img}").convert_alpha()
+        self.image = self.sprites[self.currentSprite]
         self.image.set_colorkey((0,0,0), RLEACCEL)
         self.image = pygame.transform.scale(self.image, (self.image.get_size()[0] * 5,self.image.get_size()[1] * 5))
 
 class Wizard(Movement):
     lives = 3
     def __init__(self) -> None:
-        self.image = pygame.image.load("sprites/wiz.png").convert_alpha()
+        self.sprites = [pygame.image.load("sprites/wiz0.png").convert_alpha()]
+        self.sprites.append(pygame.image.load("sprites/wiz1.png").convert_alpha())
+        self.sprites.append(pygame.image.load("sprites/wiz2.png").convert_alpha())
+        self.sprites.append(pygame.image.load("sprites/wiz3.png").convert_alpha())
+        self.currentSprite = 0
+        self.spriteBuffer = 0
+        
+        self.laser = pygame.mixer.Sound('sound/laser.mp3')
+        
+        self.image = self.sprites[self.currentSprite]
         self.image.set_colorkey((0,0,0), RLEACCEL)
         self.image = pygame.transform.scale(self.image, (200,200))
+        
         Movement.__init__(self)
         self.y = HEIGHT - self.image.get_size()[1]
-        self.movingLeft = True
         self.movingRight = False
         self.buffer = 0
         self.speed = 2
         self.bullets = pygame.sprite.Group()
         
     def update(self, keyspressed: dict):
+        
         if keyspressed[K_RIGHT]:
             self.moveRight(self.speed)
-            if self.movingLeft == True:
-                self.image = pygame.transform.flip(self.image, True, False)
-                self.movingLeft, self.movingRight = False, True
+            self.movingRight = True
     
         if keyspressed[K_LEFT]:
             self.moveLeft(self.speed)
-            if self.movingRight == True:
-                self.image = pygame.transform.flip(self.image, True, False)
-                self.movingRight, self.movingLeft = False, True
-        
+            self.movingRight = False
+                
         if keyspressed[K_SPACE]:
             if self.buffer == 0:
                 x,y = self.getPosition()
+                pygame.mixer.Sound.play(self.laser)
                 if self.movingRight:
                     x += self.image.get_size()[0]
                 for i in range(50):
                     bullet = Bullet((x,y-i))
                     self.bullets.add(bullet)
                 self.buffer = 150
-            
+                
+        self.cycleSprite()
         
         self.buffer = self.buffer - 1 if self.buffer != 0 else self.buffer
+        
+    def cycleSprite(self):
+        if self.spriteBuffer >= 50:
+            if self.currentSprite >= 4: self.currentSprite = 0
+            self.image = self.sprites[self.currentSprite]
+            self.image.set_colorkey((0,0,0), RLEACCEL)
+            self.image = pygame.transform.scale(self.image, (200,200))
+            self.currentSprite += 1
+            self.spriteBuffer = 0
+            if self.movingRight:
+                self.image = pygame.transform.flip(self.image, True, False)
+        
+        else:
+            self.spriteBuffer += 1
     
     @property
     def x(self):
