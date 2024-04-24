@@ -20,27 +20,38 @@ def gameOver():
     
 #-------------Main--------------#
 
+# Initilizing Pygame
 pygame.init()
+pygame.mixer.init()
+
+# Setting up screen
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
+pygame.display.set_caption("Wizard Game")
 clock = pygame.time.Clock()
 
+# Sets up the enemies and wizard
 enemies = pygame.sprite.Group()
 user = Wizard()
 
+# Iteration for spawning spiders
 spawning = 500
 iterator = 0
 
+# Hearts
 score = 0
 prevLives = Wizard.lives
 hearts = Hearts()
 
+# Sets Font
 font = pygame.font.SysFont("ebrima", 32,bold=True)
 
+# Sets up the scoring and the border image
 scoreText,scoreRect = setScore(score,True)
 scoreBorder = pygame.image.load("sprites/Border.png").convert_alpha()
 scoreBorder.set_colorkey((0,0,0), RLEACCEL)
 scoreBorder = pygame.transform.scale(scoreBorder, (scoreBorder.get_size()[0] * 5,scoreBorder.get_size()[1] * 5))
 
+# Loads the background
 bg = pygame.image.load("sprites/bg.png")
 bg = pygame.transform.smoothscale(bg, (WIDTH,HEIGHT))
 
@@ -95,11 +106,11 @@ while running:
     else:
         gameOver()
         
+    # updates score and lives        
     screen.blit(scoreText, scoreRect)
     screen.blit(scoreBorder, (WIDTH-275,15))
     
     screen.blit(hearts.image, (25,15))
-        
-    # updates score and lives
+
         
     pygame.display.flip()
