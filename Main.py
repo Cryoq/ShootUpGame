@@ -31,6 +31,7 @@ class Movement(pygame.sprite.Sprite, ABC):
         self.x = WIDTH/2
         self.y = HEIGHT/2
     
+<<<<<<< Updated upstream
     @property
     def x(self):
         return self._x
@@ -41,6 +42,61 @@ class Movement(pygame.sprite.Sprite, ABC):
     @property
     def y(self):
         return self._y
+=======
+# Part one of the game ( basic wiz, bullets and spider movement )
+def partOne():
+    global iterator, prevLives, score
+    # Sets a timer for spiders spawning
+    if iterator >= spawning:
+        spiders = Spider((0, randint(100,HEIGHT-300)))
+        enemies.add(spiders)
+        iterator = 0
+    iterator += 1
+    
+    # Updates positions of users, enemies, and bullets
+    user.update(pressedKeys)
+    enemies.update()
+    user.bullets.update()
+    
+    # Draws sprites on screen
+    player.draw(screen)
+    enemies.draw(screen)
+    user.bullets.draw(screen)
+    
+    # Changes text when user loses a life
+    if prevLives != Wizard.lives:
+        hearts.loseHeart()
+        hearts.update()
+        prevLives = Wizard.lives
+
+def partTwo():
+    global lastSpiderBullet, spiderBulletAngle, spiderBulletHell
+
+    currentSpiderBullet = pygame.time.get_ticks()
+    
+    # adds a bullet every .01 seconds
+    if currentSpiderBullet - lastSpiderBullet >= 10:
+        for spider in enemies:
+            spider.update()
+        lastSpiderBullet = pygame.time.get_ticks()
+                
+    # Updates player pos
+    player.update(pressedKeys)
+    
+    # Updates bullets and draws to screen
+    for spider in enemies:
+        spider.bullets.update()
+        spider.bullets.draw(screen)
+    
+    
+    # Draws player and enemies to screen
+    player.draw(screen)
+    enemies.draw(screen)
+        
+def partThree():
+    pass
+    
+>>>>>>> Stashed changes
     
     @y.setter
     def y(self, coord):
@@ -157,14 +213,29 @@ clock = pygame.time.Clock()
 
 bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+player = pygame.sprite.Group()
 user = Wizard()
+player.add(user)
 
 spawning = 500
 iterator = 0
 
+<<<<<<< Updated upstream
 score = 0
 lives = 3
 prevLives = lives
+=======
+part2 = False
+spiderBullets = pygame.sprite.Group()
+spiderBulletAngle = 0
+lastSpiderBullet = pygame.time.get_ticks()
+
+part3 = False
+
+# Hearts
+score = 5
+prevLives = Wizard.lives
+>>>>>>> Stashed changes
 hearts = Hearts()
 
 font = pygame.font.SysFont("Comic Sans MS", 32)
@@ -182,8 +253,6 @@ gameoverText = gameoverFont.render("GAME OVER!!!", True, BLACK, WHITE)
 gameoverRect = gameoverText.get_rect()
 gameoverRect.center = (WIDTH//2, HEIGHT//2)
 
-ticks = clock.tick(144)
-
 running = True
 while running:
     clock.tick(144)
@@ -191,6 +260,7 @@ while running:
         if event.type == QUIT: 
             pygame.quit()
             sys.exit()
+<<<<<<< Updated upstream
     if lives != 0:
         if iterator >= spawning:
             spiders = Spider((0, randint(50,HEIGHT-300)))
@@ -218,4 +288,94 @@ while running:
         screen.blit(scoreText, scoreRect)
         screen.blit(livesText, livesRect)
         screen.blit(gameoverText, gameoverRect)
+=======
+            
+    if Wizard.lives > 0 and BulletHellPlayer.lives > 0:
+
+        # Gets presed keys
+        pressedKeys = pygame.key.get_pressed()
+        
+        if score < 5:
+            
+            partOne()
+            
+            # Collision Detection
+            if pygame.sprite.groupcollide(user.bullets, enemies, True, True):
+                score += 1
+                scoreText = setScore(score)
+        
+        else:
+            # Part 2 of game
+            
+            # Initialized part 2 of the game
+            if not part2:
+                part2 = True
+                
+                wizard_X, wizard_Y = user.getPosition()
+                userPart2 = BulletHellPlayer(wizard_X, wizard_Y)
+                
+                hearts.resetHearts()
+                
+                enemies.empty()
+                user.bullets.empty()
+                player.empty()
+                
+                spiderBulletHell = SpiderHell((100, 100))
+                enemies.add(spiderBulletHell)
+                spiderBulletHell2 = SpiderHell((WIDTH-100, 100))
+                enemies.add(spiderBulletHell2)
+                
+                player.add(userPart2)
+                
+                invisibility_Frame = 150
+                invisibility_iteration = 150
+                
+                # Gets ticks of the beginning frame
+                startOfPart2 = pygame.time.get_ticks()
+                oneFrameOfPart2 = pygame.time.get_ticks()
+                
+            # Part 2 ends after 15 seconds
+            if oneFrameOfPart2 - startOfPart2 <= 15000:
+                   
+                partTwo()
+                
+                # Collision Detection
+                if invisibility_iteration == invisibility_Frame:
+                    if pygame.sprite.groupcollide(player, spiderBulletHell.bullets, False, False):
+                        BulletHellPlayer.lives -= 1
+                        hearts.loseHeart()
+                        hearts.update()
+                        invisibility_iteration = 0
+                else:
+                    invisibility_iteration += 1 if invisibility_iteration != invisibility_Frame else 0
+                oneFrameOfPart2 = pygame.time.get_ticks()
+
+            
+            else:
+                # initializes part 3 of the game
+                if not part3:
+                    part3 = True
+                    
+                    hearts.resetHearts()
+                    
+                    enemies.empty()
+                    player.empty()
+                    spiderBullets.empty()
+                    
+                    player.add(user)
+                
+                player.update(pressedKeys)
+                
+                player.draw(screen)
+                
+    else:
+        gameOver()
+            
+    # updates score and lives        
+    screen.blit(scoreText, scoreRect)
+    screen.blit(scoreBorder, (WIDTH-275,15))
+    
+    screen.blit(hearts.image, (25,15))
+
+>>>>>>> Stashed changes
     pygame.display.flip()
