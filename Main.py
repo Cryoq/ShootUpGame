@@ -17,6 +17,13 @@ def gameOver():
     gameoverRect.center = (WIDTH//2, HEIGHT//2)
     screen.blit(gameoverText, gameoverRect)
     
+def wingame():
+    winGameFont = pygame.font.SysFont("Comis Sans MS", 100)
+    winGameText = winGameFont.render("YOU WIN!!!", True, WHITE)
+    winGameRect = winGameText.get_rect()
+    winGameRect.center = (WIDTH//2, HEIGHT//2)
+    screen.blit(winGameText, winGameRect)
+    
 # Part one of the game ( basic wiz, bullets and spider movement )
 def partOne():
     global iterator, prevLives, score
@@ -49,7 +56,7 @@ def partTwo():
     currentSpiderBullet = pygame.time.get_ticks()
     
     # adds a bullet every .01 seconds
-    if currentSpiderBullet - lastSpiderBullet >= 10:
+    if currentSpiderBullet - lastSpiderBullet >= 20:
         for spider in enemies:
             spider.update()
         lastSpiderBullet = pygame.time.get_ticks()
@@ -92,15 +99,20 @@ player.add(user)
 spawning = 500
 iterator = 0
 
+# Set up part 2
 part2 = False
 spiderBullets = pygame.sprite.Group()
 spiderBulletAngle = 0
 lastSpiderBullet = pygame.time.get_ticks()
 
+# Setup part 3
 part3 = False
 
-# Hearts
-score = 4
+# Win condition
+win = False
+
+# Hearts and score
+score = 0
 prevLives = Wizard.lives
 hearts = Hearts()
 
@@ -129,11 +141,13 @@ while running:
             pygame.quit()
             sys.exit()
             
-    if Wizard.lives > 0 and BulletHellPlayer.lives > 0:
+    # Runs main loop if user has lives left
+    if (Wizard.lives > 0 and BulletHellPlayer.lives > 0):
 
         # Gets presed keys
         pressedKeys = pygame.key.get_pressed()
         
+        # part 1 is ran if the score is below 5
         if score < 5:
             
             partOne()
@@ -150,21 +164,25 @@ while running:
             if not part2:
                 part2 = True
                 
-                wizard_X, wizard_Y = user.getPosition()
-                userPart2 = BulletHellPlayer(wizard_X, wizard_Y)
-                
+                # Resets hearts
                 hearts.resetHearts()
+                Wizard.lives = 3
                 
+                # Gets rid of all other sprites loaded
                 enemies.empty()
                 user.bullets.empty()
                 player.empty()
                 
+                # Sets position of new character in position of the wizard
+                wizard_X, wizard_Y = user.getPosition()
+                userPart2 = BulletHellPlayer(wizard_X, wizard_Y)
+                player.add(userPart2)
+                
+                # Adds the topleft and topright spider
                 spiderBulletHell = SpiderHell((100, 100))
                 enemies.add(spiderBulletHell)
                 spiderBulletHell2 = SpiderHell((WIDTH-100, 100))
                 enemies.add(spiderBulletHell2)
-                
-                player.add(userPart2)
                 
                 invisibility_Frame = 150
                 invisibility_iteration = 150
@@ -173,12 +191,16 @@ while running:
                 startOfPart2 = pygame.time.get_ticks()
                 oneFrameOfPart2 = pygame.time.get_ticks()
                 
+                # Adds score every 100 iterations
+                scoreIterator = 0
+                scoreBuffer = 100
+                
             # Part 2 ends after 15 seconds
             if oneFrameOfPart2 - startOfPart2 <= 15000:
                    
                 partTwo()
                 
-                # Collision Detection
+                # Collision Detection with invisibility frames
                 if invisibility_iteration == invisibility_Frame:
                     if pygame.sprite.groupcollide(player, spiderBulletHell.bullets, False, False):
                         BulletHellPlayer.lives -= 1
@@ -188,24 +210,109 @@ while running:
                 else:
                     invisibility_iteration += 1 if invisibility_iteration != invisibility_Frame else 0
                 oneFrameOfPart2 = pygame.time.get_ticks()
+                
+                # Adds score every 100 iterations 
+                if scoreIterator == scoreBuffer:
+                    score += 1
+                    scoreIterator = 0
+                    scoreText = setScore(score)
+                else: scoreIterator += 1
 
             
             else:
                 # initializes part 3 of the game
                 if not part3:
                     part3 = True
+                    miniphase = True
+                    startOfMiniphase = True
                     
+                    # Resets hearts
                     hearts.resetHearts()
                     
+                    # Removes all other sprites
                     enemies.empty()
                     player.empty()
                     spiderBullets.empty()
                     
+                    # Sets up boss
+                    boss = Boss()
+                    enemies.add(boss)
+                    
+                    # Add wizard back to player group
                     player.add(user)
+                    
+                    invisibility_Frame = 150
+                    invisibility_iteration = 150
+                    
+                # If the boss dies, you win
+                if boss.hp == 0:
+                    wingame()
                 
+                # Starts phase 2 when boss has 4 hp
+                if boss.hp == 4 and miniphase:
+                    boss.phase2 = True
+                    
+                    # Initilized at start of phase 2
+                    if startOfMiniphase:
+                        startOfMiniphase = False
+                        # changes wizard back to bullet hell player
+                        player.empty()
+                        userPart2 = BulletHellPlayer(wizard_X, wizard_Y)
+                        player.add(userPart2)
+                        
+                        # sets up ticks to keep track of how long phase 2 has been
+                        startOfPhase2 = pygame.time.get_ticks()
+                        oneFrameOfPhase2 = pygame.time.get_ticks()
+                    
+                    # Phase 2 lasts 8 seconds
+                    if not(oneFrameOfPhase2 - startOfPhase2 <= 8000):
+                        miniphase = False
+                    oneFrameOfPhase2 = pygame.time.get_ticks()
+                        
+                # Ran once phase 2 ends
+                elif boss.hp == 4 and not miniphase:
+                    boss.phase2 = False
+                    
+                    # removes all bullets on screen
+                    boss.bullets.empty()
+                    
+                    # Resets player back to wizard
+                    player.empty()
+                    player.add(user)
+                    boss.updateHealth(-1)
+                    
+                                        
+                user.bullets.update()
                 player.update(pressedKeys)
+                enemies.update()
+                boss.bullets.update()
                 
+                
+                # Adds to score if user hits boss
+                if pygame.sprite.groupcollide(enemies, user.bullets, False, True):
+                    boss.updateHealth(-1)
+                    score += 1
+                    scoreText = setScore(score)
+                    if boss.hp == 0:
+                        boss.kill()
+                        boss.bullets.empty()
+                        score += 100
+                        scoreText = setScore(score)
+                        win = True
+                
+                # Collision detection with invisibility frames     
+                if invisibility_iteration == invisibility_Frame:
+                    if pygame.sprite.groupcollide(boss.bullets, player, True, False):
+                        hearts.loseHeart()
+                        Wizard.lives -= 1
+                else:
+                    invisibility_iteration += 1 if invisibility_iteration != invisibility_Frame else 0
+                
+                user.bullets.draw(screen)
                 player.draw(screen)
+                enemies.draw(screen)
+                boss.bullets.draw(screen)
+                boss.health.draw(screen)  
                 
     else:
         gameOver()
